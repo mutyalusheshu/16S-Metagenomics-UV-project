@@ -1,0 +1,1247 @@
+---
+title: "MICRON 16S UV Project"
+format: html
+editor: visual
+---
+
+## Alpha Diversity Metrics (Multi-panel)
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# Your data
+data <- data.frame(
+  Treatment = rep(c("Untreated", "3-min UV", "6-min UV"), c(8, 4, 4)),
+  Shannon = c(
+    # Untreated samples
+    3.21, 3.45, 3.12, 3.38, 3.29, 3.41, 3.18, 3.27,
+    # 3-min UV samples
+    2.87, 2.94, 2.78, 2.91,
+    # 6-min UV samples
+    2.43, 2.51, 2.36, 2.48
+  ),
+  Treatment_order = rep(c(1, 2, 3), c(8, 4, 4))
+)
+
+# Create box plot
+p1 <- ggplot(data, aes(x = factor(Treatment_order), y = Shannon, fill = Treatment)) +
+  geom_boxplot(alpha = 0.7, outlier.shape = NA) +
+  geom_jitter(width = 0.2, size = 3, alpha = 0.6) +
+  scale_fill_manual(values = c("#2E7D32", "#FFA726", "#D32F2F")) +
+  scale_x_discrete(labels = c("Untreated\n(n=8)", "3-min UV\n(n=4)", "6-min UV\n(n=4)")) +
+  labs(x = "", y = "Shannon Diversity Index", title = "A") +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 16, face = "bold")
+  ) +
+  ylim(2.0, 3.6)
+
+# Add significance bars
+library(ggsignif)
+p1 <- p1 + geom_signif(
+  comparisons = list(c("1", "2"), c("1", "3"), c("2", "3")),
+  map_signif_level = TRUE,
+  y_position = c(3.55, 3.65, 3.45),
+  annotations = c("***", "***", "***")
+)
+
+ggsave("Figure1A_Shannon.pdf", p1, width = 5, height = 5)
+```
+
+## Species Richness Metrics (Multi-panel)
+
+```{r}
+# Species richness data
+richness_data <- data.frame(
+  Treatment = factor(c("Untreated", "3-min UV", "6-min UV"), 
+                     levels = c("Untreated", "3-min UV", "6-min UV")),
+  Mean = c(151, 119, 90),
+  SD = c(11, 5, 5)
+)
+
+p2 <- ggplot(richness_data, aes(x = Treatment, y = Mean, fill = Treatment)) +
+  geom_bar(stat = "identity", alpha = 0.8) +
+  geom_errorbar(aes(ymin = Mean - SD, ymax = Mean + SD), 
+                width = 0.2, size = 1) +
+  scale_fill_manual(values = c("#2E7D32", "#FFA726", "#D32F2F")) +
+  labs(x = "", y = "Number of Species (ASVs)", title = "B") +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.text = element_text(size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.title = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 16, face = "bold")
+  ) +
+  ylim(0, 180)
+
+ggsave("Figure1B_Richness.pdf", p2, width = 5, height = 5)
+```
+
+
+## Read Counts (Microbial Abundance)
+
+```{r}
+library(ggplot2)
+
+read_count_data <- data.frame(
+  Treatment = factor(c("Untreated", "3-min UV", "6-min UV"),
+                     levels = c("Untreated", "3-min UV", "6-min UV")),
+  Mean = c(39622, 35841, 31473),
+  SD = c(2113, 1227, 1171)
+)
+
+pC <- ggplot(read_count_data, aes(x = Treatment, y = Mean, fill = Treatment)) +
+  geom_col(alpha = 0.8, width = 0.6) +
+  geom_errorbar(aes(ymin = Mean - SD, ymax = Mean + SD),
+                width = 0.2, size = 1) +
+  scale_fill_manual(values = c("#2E7D32", "#FFA726", "#D32F2F")) +
+  labs(x = "", y = "Read Counts (Microbial Abundance)", title = "C") +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.text = element_text(size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.title = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 16, face = "bold")
+  )
+# Save Panel C
+ggsave("Figure1c_ReadCounts.png", pC, width = 5, height = 5, dpi = 300)
+
+```
+
+
+## Classification Rate (% Classified to Genus)
+
+```{r}
+classification_data <- data.frame(
+  Treatment = factor(c("Untreated", "3-min UV", "6-min UV"),
+                     levels = c("Untreated", "3-min UV", "6-min UV")),
+  Mean = c(78.7, 72.6, 65.7),
+  SD = c(1.6, 1.4, 1.4)
+)
+
+pD <- ggplot(classification_data, aes(x = Treatment, y = Mean, fill = Treatment)) +
+  geom_col(alpha = 0.8, width = 0.6) +
+  geom_errorbar(aes(ymin = Mean - SD, ymax = Mean + SD),
+                width = 0.2, size = 1) +
+  scale_fill_manual(values = c("#2E7D32", "#FFA726", "#D32F2F")) +
+  labs(x = "", y = "% Classified to Genus", title = "D") +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.text = element_text(size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.title = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 16, face = "bold")
+  )
+# Save Panel D
+ggsave("Figure1d_ClassificationRate.png", pD, width = 5, height = 5, dpi = 300)
+
+```
+
+##Read Counts (Microbial Abundance)
+
+```{r}
+library(gridExtra)
+library(grid)
+
+# Combine all panels
+combined <- grid.arrange(p1, p2, pC, pD,      ncol = 2, nrow = 2,
+                         top = textGrob("Figure 1: Alpha Diversity Metrics", 
+                                        gp = gpar(fontsize = 20, fontface = "bold")))
+
+ggsave("Figure1_AlphaDiversity_Combined.png", combined, 
+       width = 10, height = 10, dpi = 300)
+```
+
+### Loading data 
+```{r}
+library(grid)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(gridExtra)
+library(ggpubr)
+  
+data <- data.frame(
+  SNo = c(1:22),
+  Sample = c("Swab blank", "3 min", "Un treated", "Zymo", "6 min", 
+             "Un treated", "Un treated", "PCR blank", "Swab blank",
+             "Un treated", "Zymo", "PCR blank", "Zymo", "6 min",
+             "6 min", "Un treated", "Un treated", "3 min", "3 min",
+             "6 min", "Un treated", "Un treated"),
+  Shannon = c(0.442, 3.4, 3.407, 1.611, 3.869, 3.455, 3.413, 0.009,
+              1.41, 2.54, 1.614, 0, 4.24, 3.289, 3.409, 3.806, 3.818,
+              3.181, 3.55, 2.527, 3.641, 4.621),
+  Species = c(5, 723, 673, 52, 1298, 694, 180, 1, 17, 167, 46, 0,
+              1383, 981, 948, 539, 603, 816, 337, 422, 358, 1987),
+  Reads = c(1441, 127555, 96910, 43056, 649430, 277490, 18293,
+            7595, 1372, 25536, 32544, 633, 348921, 137114, 253713,
+            47163, 47279, 176111, 17358, 176396, 38216, 638474),
+  Classification = c(11.10, 88.71, 94.07, 99.26, 91.72, 94.07, 89.31,
+                     0.17, 53.13, 91.32, 99.38, 0.47, 92.90, 94.50,
+                     93.86, 93.02, 87.33, 96.63, 94.20, 89.81, 86.87, 94.23)
+)
+
+# Assign treatment groups
+data$Treatment <- case_when(
+  data$Sample == "Un treated" ~ "Untreated",
+  data$Sample == "3 min" ~ "3-min UV",
+  data$Sample == "6 min" ~ "6-min UV",
+  data$Sample %in% c("Swab blank", "PCR blank") ~ "Blank",
+  data$Sample == "Zymo" ~ "Zymo Control",
+  TRUE ~ "Other"
+)
+```
+
+```{r}
+# Create separate datasets
+experimental_data <- data %>% 
+  filter(Treatment %in% c("Untreated", "3-min UV", "6-min UV"))
+
+control_data <- data %>%
+  filter(Treatment %in% c("Blank", "Zymo Control"))
+
+# Set factor levels for correct ordering
+experimental_data$Treatment <- factor(
+  experimental_data$Treatment,
+  levels = c("Untreated", "3-min UV", "6-min UV")
+)
+```
+
+## FIGURE 1: SHANNON DIVERSITY BOX PLOT
+
+```{r}
+p1_shannon <- ggplot(experimental_data, aes(x = Treatment, y = Shannon, fill = Treatment)) +
+  geom_boxplot(alpha = 0.7, outlier.shape = NA, width = 0.6) +
+  geom_jitter(width = 0.15, size = 3, alpha = 0.6) +
+  scale_fill_manual(values = c("#2E7D32", "#FFA726", "#D32F2F")) +
+  labs(
+    x = "",
+    y = "Shannon Diversity Index",
+    title = "A) Shannon Diversity"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 11),
+    axis.title = element_text(size = 12, face = "bold"),
+    plot.title = element_text(size = 13, face = "bold")
+  ) +
+  stat_compare_means(
+    comparisons = list(c("Untreated", "3-min UV"), 
+                      c("Untreated", "6-min UV"),
+                      c("3-min UV", "6-min UV")),
+    method = "wilcox.test",
+    label = "p.signif"
+  )
+#ggsave("Figure1_Shannon_Boxplot.png", p1_shannon, width = 5, height = 5, dpi = 300)
+```
+
+## FIGURE 2: SPECIES RICHNESS BOX PLOT
+
+```{r}
+p2_species <- ggplot(experimental_data, aes(x = Treatment, y = Species, fill = Treatment)) +
+  geom_boxplot(alpha = 0.7, outlier.shape = NA, width = 0.6) +
+  geom_jitter(width = 0.15, size = 3, alpha = 0.6) +
+  scale_fill_manual(values = c("#2E7D32", "#FFA726", "#D32F2F")) +
+  labs(
+    x = "",
+    y = "Number of Species (ASVs)",
+    title = "B) Species Richness"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 11),
+    axis.title = element_text(size = 12, face = "bold"),
+    plot.title = element_text(size = 13, face = "bold")
+  ) +
+  stat_compare_means(method = "kruskal.test", label.y.npc = 0.95)
+ggsave("Figure2_Species_Boxplot.png", p2_species, width = 5, height = 5, dpi = 300)
+```
+
+## FIGURE 3: READ COUNTS BAR PLOT
+
+```{r}
+p3_reads <- ggplot(experimental_data, aes(x = Treatment, y = Reads, fill = Treatment)) +
+  geom_boxplot(alpha = 0.7, outlier.shape = NA, width = 0.6) +
+  geom_jitter(width = 0.15, size = 3, alpha = 0.6) +
+  scale_fill_manual(values = c("#2E7D32", "#FFA726", "#D32F2F")) +
+  scale_y_log10(labels = scales::comma) +
+  labs(
+    x = "",
+    y = "Number of Reads (log scale)",
+    title = "C) Sequencing Depth"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 11),
+    axis.title = element_text(size = 12, face = "bold"),
+    plot.title = element_text(size = 13, face = "bold")
+  )
+ggsave("Figure3_Reads_Boxplot.png", p3_reads, width = 5, height = 5, dpi = 300)
+```
+
+## FIGURE 4: CLASSIFICATION RATE BAR PLOT
+
+```{r}
+p4_class <- ggplot(experimental_data, aes(x = Treatment, y = Classification, fill = Treatment)) +
+  geom_boxplot(alpha = 0.7, outlier.shape = NA, width = 0.6) +
+  geom_jitter(width = 0.15, size = 3, alpha = 0.6) +
+  scale_fill_manual(values = c("#2E7D32", "#FFA726", "#D32F2F")) +
+  labs(
+    x = "",
+    y = "% Classified to Genus",
+    title = "D) Taxonomic Classification"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 11),
+    axis.title = element_text(size = 12, face = "bold"),
+    plot.title = element_text(size = 13, face = "bold")
+  ) +
+  ylim(80, 100)
+ggsave("Figure4_Classification_Boxplot.png", p4_class, width = 5, height = 5, dpi = 300)
+```
+
+### COMBINE FIGURES 1-4 INTO ONE PANEL
+
+```{r}
+combined_figures <- grid.arrange(
+  p1_shannon, p2_species,
+  p3_reads, p4_class,
+  ncol = 2,
+  top = textGrob("Figure: Alpha and Beta Diversity Metrics", 
+                gp = gpar(fontsize = 16, fontface = "bold"))
+)
+ggsave("Combined_Alpha_Beta_Diversity.png", combined_figures, 
+       width = 10, height = 10, dpi = 300)
+```
+
+## FIGURE 5: INDIVIDUAL SAMPLE VARIATION
+
+```{r}
+# Show each individual sample
+p5_individual <- ggplot(experimental_data, 
+                        aes(x = reorder(paste0("S", SNo), Shannon), 
+                            y = Shannon, fill = Treatment)) +
+  geom_bar(stat = "identity", alpha = 0.8) +
+  scale_fill_manual(values = c("#2E7D32", "#FFA726", "#D32F2F")) +
+  labs(
+    x = "Sample ID",
+    y = "Shannon Diversity Index",
+    title = "Shannon Diversity by Individual Sample",
+    fill = "Treatment"
+  ) +
+  theme_classic(base_size = 11) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 9),
+    legend.position = "right"
+  ) +
+  geom_hline(yintercept = mean(experimental_data$Shannon), 
+             linetype = "dashed", color = "black")
+
+ggsave("Figure2_IndividualSamples.png", p5_individual, 
+       width = 10, height = 5, dpi = 300)
+
+```
+
+### FIGURE 6: DOSE-RESPONSE SCATTER PLOTS
+
+```{r}
+# Create UV dose as numeric
+experimental_data$UV_Time <- case_when(
+  experimental_data$Treatment == "Untreated" ~ 0,
+  experimental_data$Treatment == "3-min UV" ~ 3,
+  experimental_data$Treatment == "6-min UV" ~ 6
+)
+
+# Shannon vs UV time
+p6a_dose_shannon <- ggplot(experimental_data, aes(x = UV_Time, y = Shannon)) +
+  geom_point(aes(color = Treatment), size = 4, alpha = 0.7) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue", alpha = 0.2) +
+  scale_color_manual(values = c("#2E7D32", "#FFA726", "#D32F2F")) +
+  scale_x_continuous(breaks = c(0, 3, 6)) +
+  labs(
+    x = "UV Exposure Time (minutes)",
+    y = "Shannon Diversity Index",
+    title = "A) Dose-Response: Shannon Diversity"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(legend.position = "bottom") +
+  stat_cor(method = "spearman", label.x = 0.5, label.y = 4.5)
+# Species vs UV time
+p6b_dose_species <- ggplot(experimental_data, aes(x = UV_Time, y = Species)) +
+  geom_point(aes(color = Treatment), size = 4, alpha = 0.7) +
+  geom_smooth(method = "lm", se = TRUE, color = "darkgreen", alpha = 0.2) +
+  scale_color_manual(values = c("#2E7D32", "#FFA726", "#D32F2F")) +
+  scale_x_continuous(breaks = c(0, 3, 6)) +
+  labs(
+    x = "UV Exposure Time (minutes)",
+    y = "Number of Species",
+    title = "B) Dose-Response: Species Richness"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(legend.position = "bottom") +
+  stat_cor(method = "spearman", label.x = 0.5)
+
+combined_dose <- grid.arrange(p6a_dose_shannon, p6b_dose_species, ncol = 2)
+
+ggsave("Figure3_DoseResponse.png", combined_dose, 
+       width = 10, height = 5, dpi = 300)
+```
+
+### FIGURE 7: QUALITY CONTROL SAMPLES
+
+```{r}
+p7_controls <- ggplot(control_data, aes(x = Sample, y = Shannon, fill = Treatment)) +
+  geom_bar(stat = "identity", alpha = 0.8) +
+  scale_fill_manual(values = c("#757575", "#1976D2")) +
+  labs(
+    x = "Control Sample",
+    y = "Shannon Diversity Index",
+    title = "Quality Control Samples"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "right"
+  )
+
+ggsave("Figure4_QualityControls.png", p7_controls, 
+       width = 8, height = 5, dpi = 300)
+```
+
+
+## STATISTICAL SUMMARY TABLE
+
+```{r}
+# Calculate summary statistics
+summary_stats <- experimental_data %>%
+  group_by(Treatment) %>%
+  summarise(
+    n = n(),
+    Shannon_mean = mean(Shannon),
+    Shannon_sd = sd(Shannon),
+    Shannon_min = min(Shannon),
+    Shannon_max = max(Shannon),
+    Species_mean = mean(Species),
+    Species_sd = sd(Species),
+    Reads_mean = mean(Reads),
+    Reads_sd = sd(Reads),
+    Classification_mean = mean(Classification),
+    Classification_sd = sd(Classification),
+    .groups = "drop"
+  )
+
+# Print summary table
+print(summary_stats)
+
+write.csv(summary_stats, "Summary_Statistics_by_Treatment.csv", row.names = FALSE)
+```
+
+
+##STATISTICAL TESTS
+
+```{r}
+ #One-way ANOVA for Shannon diversity
+anova_shannon <- aov(Shannon ~ Treatment, data = experimental_data)
+print("ANOVA for Shannon Diversity:")
+print(summary(anova_shannon))
+
+# Kruskal-Wallis (non-parametric alternative)
+kruskal_shannon <- kruskal.test(Shannon ~ Treatment, data = experimental_data)
+print("Kruskal-Wallis test for Shannon Diversity:")
+print(kruskal_shannon)
+
+# Kruskal-Wallis for species richness
+kruskal_species <- kruskal.test(Species ~ Treatment, data = experimental_data)
+print("Kruskal-Wallis test for Species Richness:")
+print(kruskal_species)
+
+# Spearman correlation - UV time vs diversity
+cor_test_shannon <- cor.test(experimental_data$UV_Time, 
+                             experimental_data$Shannon, 
+                             method = "spearman")
+print("Spearman correlation: UV Time vs Shannon Diversity")
+print(cor_test_shannon)
+
+cor_test_species <- cor.test(experimental_data$UV_Time, 
+                             experimental_data$Species, 
+                             method = "spearman")
+print("Spearman correlation: UV Time vs Species Richness")
+print(cor_test_species)
+```
+
+
+```{r}
+# Save all test results
+sink("Statistical_Test_Results.txt")
+cat("===== ANOVA: Shannon Diversity =====\n")
+print(summary(anova_shannon))
+cat("\n===== Kruskal-Wallis: Shannon Diversity =====\n")
+print(kruskal_shannon)
+cat("\n===== Kruskal-Wallis: Species Richness =====\n")
+print(kruskal_species)
+cat("\n===== Correlation: UV Time vs Shannon =====\n")
+print(cor_test_shannon)
+cat("\n===== Correlation: UV Time vs Species =====\n")
+print(cor_test_species)
+sink()
+
+print("All figures and statistical tests completed!")
+print("Files saved:")
+print("  - Figure1_AlphaDiversity_Combined.pdf/png")
+print("  - Figure2_IndividualSamples.pdf")
+print("  - Figure3_DoseResponse.pdf")
+print("  - Figure4_QualityControls.pdf")
+print("  - Summary_Statistics_by_Treatment.csv")
+print("  - Statistical_Test_Results.txt")
+```
+
+
+## LOAD DATA & packages FROM CSV
+
+```{r}
+library(vegan)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(RColorBrewer)
+library(gridExtra)
+library(ggrepel)
+```
+
+```{r}
+# Read the genus-level data
+genus_data <- read.csv("Genus_Level_Aggregate_Counts.csv", row.names = 1)
+# Sample names from columns
+sample_names <- colnames(genus_data)
+
+# Create metadata
+metadata <- data.frame(
+  Sample = sample_names,
+  Treatment = c("Blank", "3-min UV", "Untreated", "Zymo", "6-min UV", 
+                "Untreated", "Untreated", "PCR blank", "Blank", "Untreated",
+                "Zymo", "PCR blank", "3-min UV", "6-min UV", "6-min UV",
+                "Untreated", "Untreated", "3-min UV", "3-min UV", "6-min UV",
+                "Untreated", "Untreated"),
+  SampleID = c("Swab blank", "3 min", "Un treated", "Zymo", "6 min",
+               "Un treated", "Un treated", "PCR blank", "Swab blank", "Un treated",
+               "Zymo", "PCR blank", "3 min", "6 min", "6 min",
+               "Un treated", "Un treated", "3 min", "3 min", "6 min",
+               "Un treated", "Un treated"),
+  stringsAsFactors = FALSE
+)
+```
+
+## Assign colors
+```{r}
+# Assign colors
+metadata$Color <- case_when(
+  metadata$Treatment == "Untreated" ~ "#2E7D32",
+  metadata$Treatment == "3-min UV" ~ "#FFA726",
+  metadata$Treatment == "6-min UV" ~ "#D32F2F",
+  metadata$Treatment == "Blank" ~ "#757575",
+  metadata$Treatment == "PCR blank" ~ "#BDBDBD",
+  metadata$Treatment == "Zymo" ~ "#1976D2"
+)
+
+metadata$Shape <- case_when(
+  metadata$Treatment == "Untreated" ~ 16,
+  metadata$Treatment == "3-min UV" ~ 17,
+  metadata$Treatment == "6-min UV" ~ 18,
+  metadata$Treatment == "Blank" ~ 4,
+  metadata$Treatment == "PCR blank" ~ 3,
+  metadata$Treatment == "Zymo" ~ 8
+)
+
+# Transpose for analysis (samples as rows, genera as columns)
+genus_matrix <- t(genus_data)
+```
+
+## DATA NORMALIZATION
+
+```{r}
+# Calculate relative abundance (proportions)
+genus_rel <- genus_matrix / rowSums(genus_matrix)
+
+# FIGURE 1: PCoA - ALL SAMPLES
+
+# Calculate Bray-Curtis dissimilarity
+bc_dist <- vegdist(genus_rel, method = "bray")
+
+# Perform PCoA
+pcoa_result <- cmdscale(bc_dist, k = 2, eig = TRUE)
+
+# Extract coordinates
+pcoa_coords <- data.frame(
+  PC1 = pcoa_result$points[, 1],
+  PC2 = pcoa_result$points[, 2],
+  Sample = metadata$Sample,
+  Treatment = factor(metadata$Treatment, 
+                     levels = c("Untreated", "3-min UV", "6-min UV", 
+                               "Blank", "PCR blank", "Zymo")),
+  Color = metadata$Color,
+  Shape = metadata$Shape
+)
+
+# Calculate variance explained
+var_explained <- round(pcoa_result$eig / sum(pcoa_result$eig) * 100, 1)
+```
+
+## PCoA PLOT - ALL SAMPLES
+```{r}
+# Create PCoA plot - All samples
+p1_pcoa_all <- ggplot(pcoa_coords, 
+                      aes(x = PC1, y = PC2, color = Treatment, shape = Treatment)) +
+  geom_point(size = 5, alpha = 0.8) +
+  stat_ellipse(aes(group = Treatment), level = 0.95, linetype = 2, linewidth = 1) +
+  scale_color_manual(
+    values = c("#2E7D32", "#FFA726", "#D32F2F", "#757575", "#BDBDBD", "#1976D2"),
+    name = "Sample Type"
+  ) +
+  scale_shape_manual(
+    values = c(16, 17, 18, 4, 3, 8),
+    name = "Sample Type"
+  ) +
+  labs(
+    x = paste0("PC1 (", var_explained[1], "% variance)"),
+    y = paste0("PC2 (", var_explained[2], "% variance)"),
+    title = "PCoA: All Samples (Bray-Curtis Dissimilarity)"
+  ) +
+  theme_classic(base_size = 14) +
+  theme(
+    legend.position = "right",
+    legend.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 11),
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5)
+  )
+
+#ggsave("Figure_PCoA_All_Samples.pdf", p1_pcoa_all, width = 9, height = 6, dpi = 300)
+```
+
+## PCoA PLOT - EXPERIMENTAL SAMPLES ONLY
+
+```{r}
+# Filter for UV study samples only
+uv_samples <- metadata$Treatment %in% c("Untreated", "3-min UV", "6-min UV")
+genus_rel_uv <- genus_rel[uv_samples, ]
+metadata_uv <- metadata[uv_samples, ]
+
+# Recalculate Bray-Curtis for UV samples
+bc_dist_uv <- vegdist(genus_rel_uv, method = "bray")
+pcoa_result_uv <- cmdscale(bc_dist_uv, k = 2, eig = TRUE)
+
+# Extract coordinates
+pcoa_coords_uv <- data.frame(
+  PC1 = pcoa_result_uv$points[, 1],
+  PC2 = pcoa_result_uv$points[, 2],
+  Treatment = factor(metadata_uv$Treatment, 
+                     levels = c("Untreated", "3-min UV", "6-min UV"))
+)
+
+# Calculate variance explained
+var_explained_uv <- round(pcoa_result_uv$eig / sum(pcoa_result_uv$eig) * 100, 1)
+
+# Create PCoA plot - UV samples only
+p2_pcoa_uv <- ggplot(pcoa_coords_uv, 
+                     aes(x = PC1, y = PC2, color = Treatment, shape = Treatment)) +
+  geom_point(size = 6, alpha = 0.8) +
+  stat_ellipse(aes(group = Treatment), level = 0.95, linetype = 2, linewidth = 1.2) +
+  scale_color_manual(
+    values = c("#2E7D32", "#FFA726", "#D32F2F"),
+    name = "Treatment"
+  ) +
+  scale_shape_manual(
+    values = c(16, 17, 18),
+    name = "Treatment"
+  ) +
+  labs(
+    x = paste0("PC1 (", var_explained_uv[1], "% variance)"),
+    y = paste0("PC2 (", var_explained_uv[2], "% variance)"),
+    title = "PCoA: UV Treatment Study (Bray-Curtis Dissimilarity)"
+  ) +
+  theme_classic(base_size = 14) +
+  theme(
+    legend.position = "right",
+    legend.title = element_text(size = 13, face = "bold"),
+    legend.text = element_text(size = 12),
+    plot.title = element_text(size = 15, face = "bold", hjust = 0.5)
+  )
+
+ggsave("Figure_PCoA_UV_Study.pdf", p2_pcoa_uv, width = 8, height = 6, dpi = 300)
+
+```
+
+
+## STATISTICAL TESTING FOR BETA DIVERSITY
+```{r}
+# PERMANOVA for UV treatment effect
+set.seed(123)  # For reproducibility
+permanova_uv <- adonis2(bc_dist_uv ~ Treatment, data = metadata_uv, permutations = 999)
+print("PERMANOVA Results for UV Treatment Effect:")
+print(permanova_uv)
+# Save PERMANOVA results
+sink("PERMANOVA_UV_Treatment_Results.txt")
+cat("===== PERMANOVA: UV Treatment Effect =====\n")
+print(permanova_uv)
+sink()
+print("PCoA plots and PERMANOVA analysis completed!")
+print("Files saved:")
+print("  - Figure_PCoA_All_Samples.pdf")
+print("  - Figure_PCoA_UV_Study.pdf")
+print("  - PERMANOVA_UV_Treatment_Results.txt")
+```
+
+# PERMANOVA STATISTICAL TESTS
+
+```{r}
+# PERMANOVA for all samples
+permanova_all <- adonis2(bc_dist ~ Treatment, data = metadata, permutations = 9999)
+print("PERMANOVA: All Samples")
+print(permanova_all)
+
+# PERMANOVA for UV samples only
+#permanova_uv <- adonis2(bc_dist_uv ~ Treatment, data = metadata_uv, permutations = 9999)
+#print("PERMANOVA: UV Study Samples")
+#print(permanova_uv)
+
+# Pairwise PERMANOVA for UV samples
+# Untreated vs 3-min
+subset_ut_3 <- metadata_uv$Treatment %in% c("Untreated", "3-min UV")
+perm_ut_3 <- adonis2(bc_dist_uv[subset_ut_3, subset_ut_3] ~ Treatment,
+                     data = metadata_uv[subset_ut_3, ], permutations = 9999)
+print("Pairwise: Untreated vs 3-min UV")
+print(perm_ut_3)
+
+# Untreated vs 6-min
+subset_ut_6 <- metadata_uv$Treatment %in% c("Untreated", "6-min UV")
+perm_ut_6 <- adonis2(bc_dist_uv[subset_ut_6, subset_ut_6] ~ Treatment,
+                     data = metadata_uv[subset_ut_6, ], permutations = 9999)
+print("Pairwise: Untreated vs 6-min UV")
+print(perm_ut_6)
+
+# 3-min vs 6-min
+#subset_3_6 <- metadata_uv$Treatment %in% c("3-min UV", "6-min UV")
+#perm_3_6 <- adonis2(bc_dist_uv[subset_3_6, subset_3_6] ~ Treatment, data = metadata_uv[subset_3_6, ], permutations = 9999)
+#print("Pairwise: 3-min vs 6-min UV")
+#print(perm_3_6)
+
+# PERMDISP - test homogeneity of dispersion
+disp_uv <- betadisper(bc_dist_uv, metadata_uv$Treatment)
+print("PERMDISP: Homogeneity of Dispersion")
+print(permutest(disp_uv, permutations = 999))
+print(TukeyHSD(disp_uv))
+```
+
+## FIGURE 3: TAXONOMIC COMPOSITION - TOP 15 GENERA
+
+```{r}
+# Calculate average relative abundance per treatment for UV samples
+genus_rel_uv_df <- as.data.frame(genus_rel_uv)
+genus_rel_uv_df$Treatment <- metadata_uv$Treatment
+
+# Calculate mean abundance per treatment
+genus_avg <- genus_rel_uv_df %>%
+  group_by(Treatment) %>%
+  summarise(across(everything(), mean, .names = "{.col}")) %>%
+  pivot_longer(cols = -Treatment, names_to = "Genus", values_to = "Abundance")
+
+# Get top 15 genera overall
+top15_genera <- genus_avg %>%
+  group_by(Genus) %>%
+  summarise(TotalAbundance = sum(Abundance)) %>%
+  arrange(desc(TotalAbundance)) %>%
+  slice(1:15) %>%
+  pull(Genus)
+
+# Filter for top 15 + create "Other" category
+genus_avg_top <- genus_avg %>%
+  mutate(Genus_Category = ifelse(Genus %in% top15_genera, Genus, "Other")) %>%
+  group_by(Treatment, Genus_Category) %>%
+  summarise(Abundance = sum(Abundance), .groups = "drop") %>%
+  mutate(Percentage = Abundance * 100)
+
+# Set factor levels for consistent ordering
+genus_avg_top$Treatment <- factor(genus_avg_top$Treatment,
+                                   levels = c("Untreated", "3-min UV", "6-min UV"))
+
+# Create color palette
+colors_genera <- c(brewer.pal(12, "Set3"), brewer.pal(3, "Pastel1"), "#CCCCCC")
+names(colors_genera) <- c(top15_genera, "Other")
+
+# Create stacked bar chart
+p3_taxonomy <- ggplot(genus_avg_top, 
+                      aes(x = Treatment, y = Percentage, fill = Genus_Category)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.7) +
+  scale_fill_manual(values = colors_genera, name = "Genus") +
+  labs(
+    x = "Treatment Group",
+    y = "Relative Abundance (%)",
+    title = "Taxonomic Composition: Top 15 Genera"
+  ) +
+  theme_classic(base_size = 13) +
+  theme(
+    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 12),
+    legend.position = "right",
+    legend.text = element_text(size = 9),
+    legend.title = element_text(size = 11, face = "bold"),
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5)
+  ) +
+  guides(fill = guide_legend(ncol = 1))
+
+ggsave("Figure_Taxonomic_Composition_Top15.png", p3_taxonomy, 
+       width = 10, height = 7, dpi = 300)
+```
+
+##FIGURE 4: SAMPLE-WISE TAXONOMIC COMPOSITION
+
+```{r}
+# Prepare data for individual sample visualization
+genus_rel_long <- genus_rel_uv_df %>%
+  mutate(Sample = row.names(genus_rel_uv)) %>%
+  pivot_longer(cols = -c(Treatment, Sample), 
+               names_to = "Genus", values_to = "Abundance") %>%
+  mutate(Genus_Category = ifelse(Genus %in% top15_genera, Genus, "Other")) %>%
+  group_by(Treatment, Sample, Genus_Category) %>%
+  summarise(Abundance = sum(Abundance), .groups = "drop") %>%
+  mutate(Percentage = Abundance * 100)
+
+# Create sample-wise plot
+p4_samples <- ggplot(genus_rel_long, 
+                     aes(x = Sample, y = Percentage, fill = Genus_Category)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.8) +
+  scale_fill_manual(values = colors_genera, name = "Genus") +
+  facet_grid(. ~ Treatment, scales = "free_x", space = "free_x") +
+  labs(
+    x = "Individual Samples",
+    y = "Relative Abundance (%)",
+    title = "Sample-wise Taxonomic Composition (Top 15 Genera)"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 8),
+    strip.background = element_rect(fill = "lightgray"),
+    strip.text = element_text(size = 11, face = "bold"),
+    legend.position = "right",
+    legend.text = element_text(size = 8),
+    plot.title = element_text(size = 13, face = "bold", hjust = 0.5)
+  ) +
+  guides(fill = guide_legend(ncol = 1))
+
+ggsave("Figure_Samplewise_Taxonomy.png", p4_samples, 
+       width = 14, height = 7, dpi = 300)
+```
+## Combined FIGURE 3 & 4
+```{r}
+combined_taxonomy <- arrangeGrob(
+  p3_taxonomy,
+  top = textGrob("A", x = unit(0, "npc"), y = unit(1, "npc"),
+                 just = c("left", "top"),
+                 gp = gpar(fontsize = 16, fontface = "bold"))
+)
+
+samples_labeled <- arrangeGrob(
+  p4_samples,
+  top = textGrob("B", x = unit(0, "npc"), y = unit(1, "npc"),
+                 just = c("left", "top"),
+                 gp = gpar(fontsize = 16, fontface = "bold"))
+)
+
+# Combine labeled plots
+combined_sample_figures <- grid.arrange(
+  combined_taxonomy, samples_labeled,
+  ncol = 2
+)
+
+ggsave("Combined_Taxonomic_Composition.png", combined_sample_figures, 
+       width = 14, height = 8, dpi = 300)
+
+```
+
+### FIGURE 5: HEATMAP OF TOP 30 GENERA
+
+```{r}
+# Get top 30 genera
+top30_genera <- genus_avg %>%
+  group_by(Genus) %>%
+  summarise(TotalAbundance = sum(Abundance)) %>%
+  arrange(desc(TotalAbundance)) %>%
+  slice(1:30) %>%
+  pull(Genus)
+
+# Filter data for heatmap
+genus_top30 <- genus_rel_uv[, colnames(genus_rel_uv) %in% top30_genera]
+
+# Create annotation
+annotation_row <- data.frame(
+  Treatment = metadata_uv$Treatment,
+  row.names = rownames(genus_top30)
+)
+
+# Create heatmap
+library(pheatmap)
+pheatmap(
+  t(genus_top30),
+  annotation_col = annotation_row,
+  scale = "row",
+  clustering_distance_rows = "correlation",
+  clustering_distance_cols = "euclidean",
+  color = colorRampPalette(c("navy", "white", "firebrick3"))(50),
+  main = "Heatmap: Top 30 Genera Across UV Treatments",
+  fontsize = 9,
+  fontsize_row = 7,
+  fontsize_col = 8,
+  filename = "Figure_Heatmap_Top30.png",
+  width = 10,
+  height = 12
+)
+```
+
+
+### FIGURE 6: UV-SENSITIVE VS UV-RESISTANT GENERA
+
+```{r}
+# Identify genera enriched or depleted with UV
+genus_change <- genus_avg %>%
+  pivot_wider(names_from = Treatment, values_from = Abundance) %>%
+  mutate(
+    FC_3min = `3-min UV` / Untreated,
+    FC_6min = `6-min UV` / Untreated,
+    Log2FC_6min = log2(FC_6min + 0.00001)
+  ) %>%
+  filter(Untreated > 0.001 | `6-min UV` > 0.001) # Filter low abundance
+
+# Identify significantly changed genera (>2-fold change)
+uv_sensitive <- genus_change %>%
+  filter(Log2FC_6min < -1) %>%
+  arrange(Log2FC_6min) %>%
+  slice(1:10)
+
+uv_resistant <- genus_change %>%
+  filter(Log2FC_6min > 1) %>%
+  arrange(desc(Log2FC_6min)) %>%
+  slice(1:10)
+
+# Create comparison plot
+comparison_data <- bind_rows(
+  uv_sensitive %>% mutate(Type = "UV-Sensitive"),
+  uv_resistant %>% mutate(Type = "UV-Resistant")
+)
+
+p6_comparison <- ggplot(comparison_data, 
+                        aes(x = reorder(Genus, Log2FC_6min), 
+                            y = Log2FC_6min, fill = Type)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("UV-Sensitive" = "#2166AC", 
+                                "UV-Resistant" = "#B2182B")) +
+  coord_flip() +
+  labs(
+    x = "Genus",
+    y = "Log2 Fold Change (6-min UV vs. Untreated)",
+    title = "Top UV-Sensitive and UV-Resistant Genera"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5)
+  ) +
+  geom_hline(yintercept = 0, linetype = "solid", color = "black", linewidth = 1)
+
+ggsave("Figure_UV_Response_Genera.png", p6_comparison, 
+       width = 9, height = 7, dpi = 300)
+```
+
+
+### SAVE STATISTICAL RESULTS
+
+```{r}
+sink("PERMANOVA_Results.txt")
+cat("========================================\n")
+cat("PERMANOVA RESULTS\n")
+cat("========================================\n\n")
+
+cat("--- ALL SAMPLES ---\n")
+print(permanova_all)
+
+cat("\n--- UV STUDY SAMPLES ---\n")
+print(permanova_uv)
+
+cat("\n--- PAIRWISE COMPARISONS ---\n")
+cat("\nUntreated vs 3-min UV:\n")
+print(perm_ut_3)
+
+cat("\nUntreated vs 6-min UV:\n")
+print(perm_ut_6)
+
+cat("\n3-min UV vs 6-min UV:\n")
+print(perm_3_6)
+
+cat("\n--- PERMDISP: Homogeneity of Dispersion ---\n")
+print(permutest(disp_uv, permutations = 999))
+print(TukeyHSD(disp_uv))
+
+sink()
+print("All PCoA figures and statistical analyses completed!")
+```
+
+### SAVE SUMMARY TABLES
+
+```{r}
+# Top 15 genera by treatment
+write.csv(genus_avg_top, "Table_Top15_Genera_by_Treatment.csv", row.names = FALSE)
+
+# UV-sensitive genera
+write.csv(uv_sensitive, "Table_UV_Sensitive_Genera.csv", row.names = FALSE)
+
+# UV-resistant genera
+write.csv(uv_resistant, "Table_UV_Resistant_Genera.csv", row.names = FALSE)
+
+print("Analysis complete! All figures and tables saved.")
+print("Generated files:")
+print("  - Figure_PCoA_All_Samples.pdf")
+print("  - Figure_PCoA_UV_Study.pdf")
+print("  - Figure_Taxonomic_Composition_Top15.pdf")
+print("  - Figure_Samplewise_Taxonomy.pdf")
+print("  - Figure_Heatmap_Top30.pdf")
+print("  - Figure_UV_Response_Genera.pdf")
+print("  - PERMANOVA_Results.txt")
+print("  - Table_Top15_Genera_by_Treatment.csv")
+print("  - Table_UV_Sensitive_Genera.csv")
+print("  - Table_UV_Resistant_Genera.csv")
+```
+```{r}
+qc_samples <- metadata$Treatment %in% c("Blank", "Zymo", "PCR blank")
+genus_rel_qc <- genus_rel[qc_samples, ]
+metadata_qc <- metadata[qc_samples, ]
+
+# Create dataframe for visualization
+genus_rel_qc_df <- as.data.frame(genus_rel_qc)
+genus_rel_qc_df$Sample <- rownames(genus_rel_qc_df)
+genus_rel_qc_df$Treatment <- metadata_qc$Treatment
+genus_rel_qc_long <- genus_rel_qc_df %>%
+  pivot_longer(cols = -c(Sample, Treatment), 
+               names_to = "Genus", values_to = "Abundance") %>%
+  group_by(Sample, Treatment, Genus) %>%
+  summarise(Abundance = sum(Abundance), .groups = "drop") %>%
+  mutate(Percentage = Abundance * 100)
+# Create bar plot for QC samples
+p_qc <- ggplot(genus_rel_qc_long, 
+               aes(x = Sample, y = Percentage, fill = Genus)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.7) +
+  labs(
+    x = "QC Samples",
+    y = "Relative Abundance (%)",
+    title = "Taxonomic Composition of Quality Control Samples"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+    legend.position = "right",
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5)
+  ) +
+  guides(fill = guide_legend(ncol = 1))
+ggsave("Figure_QC_Samples_Taxonomy.png", p_qc, 
+       width = 10, height = 6, dpi = 300)
+```
+## FIGURE 7a: AVERAGE QC TAXONOMIC COMPOSITION
+```{r}
+# Calculate mean abundance per QC sample type
+genus_avg_qc <- genus_rel_qc_df %>%
+  group_by(Treatment) %>%
+  summarise(across(-Sample, mean, .names = "{.col}")) %>%
+  pivot_longer(cols = -Treatment, names_to = "Genus", values_to = "Abundance")
+
+# Get top 15 genera for QC samples
+top15_qc_genera <- genus_avg_qc %>%
+  group_by(Genus) %>%
+  summarise(TotalAbundance = sum(Abundance)) %>%
+  arrange(desc(TotalAbundance)) %>%
+  slice(1:15) %>%
+  pull(Genus)
+
+# Create "Other" category
+genus_avg_qc_top <- genus_avg_qc %>%
+  mutate(Genus_Category = ifelse(Genus %in% top15_qc_genera, Genus, "Other")) %>%
+  group_by(Treatment, Genus_Category) %>%
+  summarise(Abundance = sum(Abundance), .groups = "drop") %>%
+  mutate(Percentage = Abundance * 100)
+
+# Set factor levels
+genus_avg_qc_top$Treatment <- factor(genus_avg_qc_top$Treatment,
+                                      levels = c("Blank", "PCR blank", "Zymo"))
+
+# Create color palette
+colors_qc_genera <- c(brewer.pal(12, "Set3"), brewer.pal(3, "Pastel1"), "#CCCCCC")
+names(colors_qc_genera) <- c(top15_qc_genera, "Other")
+
+# Create stacked bar chart
+p7_qc_taxonomy <- ggplot(genus_avg_qc_top, 
+                         aes(x = Treatment, y = Percentage, fill = Genus_Category)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.6) +
+  scale_fill_manual(values = colors_qc_genera, name = "Genus") +
+  labs(
+    x = "Quality Control Sample Type",
+    y = "Relative Abundance (%)",
+    title = "Taxonomic Composition (Top 15 Genera)"
+  ) +
+  theme_classic(base_size = 13) +
+  theme(
+    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 12),
+    legend.position = "right",
+    legend.text = element_text(size = 9),
+    legend.title = element_text(size = 11, face = "bold"),
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5)
+  ) +
+  guides(fill = guide_legend(ncol = 1))
+
+ggsave("Figure_QC_Samples_Taxonomy.png", p7_qc_taxonomy, 
+       width = 10, height = 7, dpi = 300)
+
+print("Figure 7: QC Samples Taxonomic Composition saved as Figure_QC_Samples_Taxonomy.pdf")
+```
+## FIGURE 7b: SAMPLE-WISE QC TAXONOMIC COMPOSITION
+```{r}
+genus_rel_qc_long <- genus_rel_qc_df %>%
+  pivot_longer(cols = -c(Treatment, Sample), 
+               names_to = "Genus", values_to = "Abundance") %>%
+  mutate(Genus_Category = ifelse(Genus %in% top15_qc_genera, Genus, "Other")) %>%
+  group_by(Treatment, Sample, Genus_Category) %>%
+  summarise(Abundance = sum(Abundance), .groups = "drop") %>%
+  mutate(Percentage = Abundance * 100)
+
+# Create sample-wise plot
+p7b_qc_samples <- ggplot(genus_rel_qc_long, 
+                         aes(x = Sample, y = Percentage, fill = Genus_Category)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.8) +
+  scale_fill_manual(values = colors_qc_genera, name = "Genus") +
+  facet_grid(. ~ Treatment, scales = "free_x", space = "free_x") +
+  labs(
+    x = "Individual QC Samples",
+    y = "Relative Abundance (%)",
+    title = "Sample-wise Quality Control Taxonomic Composition (Top 15 Genera)"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 9),
+    strip.background = element_rect(fill = "lightgray"),
+    strip.text = element_text(size = 11, face = "bold"),
+    legend.position = "right",
+    legend.text = element_text(size = 8),
+    plot.title = element_text(size = 13, face = "bold", hjust = 0.5)
+  ) +
+  guides(fill = guide_legend(ncol = 1))
+
+ggsave("Figure_QC_Samples_Individual.png", p7b_qc_samples, 
+       width = 12, height = 7, dpi = 300)
+
+print("Figure 7b: QC Samples Individual Composition saved as Figure_QC_Samples_Individual.pdf")
+
+```
+
+## COMBINE FIGURE 7a AND 7b
+```{r}
+ library(grid)
+library(gridExtra)
+
+# Label each plot individually
+p7_qc_taxonomy_labeled <- arrangeGrob(
+  p7_qc_taxonomy,
+  top = textGrob("A", x = unit(0, "npc"), y = unit(1, "npc"),
+                 just = c("left", "top"),
+                 gp = gpar(fontsize = 16, fontface = "bold"))
+)
+
+p7b_qc_samples_labeled <- arrangeGrob(
+  p7b_qc_samples,
+  top = textGrob("B", x = unit(0, "npc"), y = unit(1, "npc"),
+                 just = c("left", "top"),
+                 gp = gpar(fontsize = 16, fontface = "bold"))
+)
+
+# Combine labeled plots
+combined_control_figures <- grid.arrange(
+  p7_qc_taxonomy_labeled, p7b_qc_samples_labeled,
+  ncol = 2
+)
+# Save combined figure
+ggsave("combined_control_figures.png", combined_control_figures, 
+       width = 14, height = 8, dpi = 300)
+```
+
+
+
+## TABLE: QC SAMPLES TOP 30 GENERA
+```{r}
+qc_genus_summary <- genus_avg_qc %>%
+  group_by(Genus) %>%
+  summarise(
+    Mean_Abundance = mean(Abundance),
+    Max_Abundance = max(Abundance),
+    Min_Abundance = min(Abundance),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(Mean_Abundance)) %>%
+  slice(1:30)
+
+# Save QC summary table
+write.csv(qc_genus_summary, "Table_QC_Samples_Top30_Genera.csv", row.names = FALSE)
+
+print("Table: QC Samples Top 30 Genera saved as Table_QC_Samples_Top30_Genera.csv")
+
+```
+## FIGURE 7c: QC SAMPLES DIVERSITY METRICS
+```{r}
+# Calculate Shannon diversity for QC samples
+shannon_qc <- diversity(genus_rel_qc, index = "shannon")
+simpson_qc <- diversity(genus_rel_qc, index = "simpson")
+
+# Create diversity summary
+qc_diversity <- data.frame(
+  Sample = rownames(genus_rel_qc),
+  Treatment = metadata_qc$Treatment,
+  Shannon_Index = shannon_qc,
+  Simpson_Index = simpson_qc
+)
+
+# Create diversity plot
+p7c_qc_diversity <- ggplot(qc_diversity, 
+                           aes(x = Treatment, y = Shannon_Index, fill = Treatment)) +
+  geom_boxplot(alpha = 0.6, outlier.shape = NA) +
+  geom_jitter(width = 0.2, size = 3, alpha = 0.7) +
+  scale_fill_manual(
+    values = c("Blank" = "#757575", "PCR blank" = "#BDBDBD", "Zymo" = "#1976D2"),
+    name = "QC Type"
+  ) +
+  labs(
+    x = "Quality Control Sample Type",
+    y = "Shannon Diversity Index",
+    title = "Microbial Diversity: Quality Control Samples"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    axis.text.x = element_text(size = 11),
+    legend.position = "right",
+    plot.title = element_text(size = 13, face = "bold", hjust = 0.5)
+  )
+
+ggsave("Figure_QC_Samples_Diversity.pdf", p7c_qc_diversity, 
+       width = 8, height = 6, dpi = 300)
+
+print("Figure 7c: QC Samples Diversity saved as Figure_QC_Samples_Diversity.pdf")
+
+# Save QC diversity summary
+write.csv(qc_diversity, "Table_QC_Samples_Diversity.csv", row.names = FALSE)
+
+print("Table: QC Samples Diversity saved as Table_QC_Samples_Diversity.csv")
+```
+
